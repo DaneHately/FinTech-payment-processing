@@ -56,27 +56,29 @@ sql
 Copy
 SELECT * FROM payments.transactions ORDER BY id DESC;
 
----
 
+---
 ### Built Without
 - No Terraform, CDK, or CloudFormation (manual setup for learning purposes).
 - No managed frontend (Node.js app built from scratch).
 - No public RDS (kept private with SGs and NACLs for security best practices).
 
+
 #### Screenshots
-Terminal output, AWS Console configurations (e.g., ALB setup in screenshots/ALB SG.png), and MySQL queries are located in the screenshots/ folder. Useful for documentation, verification, and future reference.
+Terminal output, curl responses, AWS Console configurations (e.g., ALB setup in `screenshots/alb-config.png`), and MySQL queries are located in the `screenshots/` folder. Useful for documentation, verification, and future reference.
+
 
 ### Well-Architected Alignment
-- Security: RDS encryption, S3 server-side encryption, least-privilege SGs/NACLs.
-- Cost Optimization: Used t3.micro instances, cleaned up resources post-deployment.
-- Observability: Integrated CloudWatch Logs and Lambda for transaction alerts.
-- Reliability: Multi-AZ setup for ALB, EC2, and RDS.
+- **Security**: RDS encryption, S3 server-side encryption, least-privilege SGs/NACLs.
+- **Cost Optimization**: Used t3.micro instances, cleaned up resources post-deployment.
+- **Observability**: Integrated CloudWatch Logs and Lambda for transaction alerts.
+- **Reliability**: Multi-AZ setup for ALB, EC2, and RDS.
+
 
 ### About Me
 I'm diving deep into cloud engineering by building real AWS infrastructure from the ground up. I currently hold the Google Associate Cloud Engineer certification and am preparing for the AWS Solutions Architect Associate (SAA) exam. After that, I’m aiming to earn the HashiCorp Terraform Associate and Certified Kubernetes Administrator (CKA) certifications.
 
 Each project I build sharpens my understanding and brings me closer to being job-ready in real cloud environments.
 
-If you're hiring or collaborating, feel free to reach out — I’m motivated, learning fast, and excited to contribute to real-world systems.
-
+If you're hiring or collaborating, feel free to reach out — I’m motivated, learning fast, and excited to contribute to real-world systems.  
 Email: hatelydane@gmail.com
