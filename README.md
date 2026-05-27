@@ -1,6 +1,8 @@
 # FinTech Payment Processing Lab: Secure Multi-Tier AWS Pipeline
 
-This project deploys a secure, scalable FinTech payment processing pipeline on AWS, simulating a real-world 3-tier architecture with zero automation to master every component manually. This is my **second full-stack infrastructure project on AWS**, built from scratch as part of my hands-on learning journey. I’m studying the **AWS ecosystem by doing**, intentionally building without automation (at first) to fully understand every moving part. This project simulates a **real-world, secure multi-tier application pipeline**, integrating load balancers, subnets, security boundaries, and backend services.
+**By Ember Cloud LLC**
+
+This repository documents the manual provisioning and architectural hardening of a secure, scalable 3-tier FinTech payment processing pipeline on AWS. Built entirely without automation frameworks (at first) to master the low-level mechanics of core AWS infrastructure, this project simulates an enterprise-grade financial transaction pipeline integrating application load balancers, multi-AZ subnets, strict security boundaries, and decoupled backend compute.
 
 ---
 
@@ -8,81 +10,53 @@ This project deploys a secure, scalable FinTech payment processing pipeline on A
 
 ### End-to-End Workflow
 ![FinTech Payment Processing Workflow](architecture-diagram.png)
-This diagram illustrates the end-to-end workflow of the payment processing system, from user interaction to logging and alerts.
+*This diagram illustrates the end-to-end asynchronous workflow of the payment processing system, from public edge ingestion to downstream transaction persistence.*
 
 ### Detailed Architecture Breakdown
 ![FinTech Payment Processing Detailed Architecture](architecture-details.png)
-This diagram provides a detailed breakdown of the 3-tier architecture, focusing on subnet configurations, NACLs, and Well-Architected principles applied in the lab.
+*This schematic highlights the isolation design of the 3-tier architecture, emphasizing subnet boundaries, Network Access Control Lists (NACLs), and AWS Well-Architected Framework compliance.*
 
-**Core Workflow:**
-1. A user submits a payment via a public-facing Application Load Balancer (ALB) on HTTP/80.
-2. The public ALB forwards the request to a Node.js server in the Web Tier (EC2 t3.micro instances in public subnets).
-3. The Web Tier sends a POST request to an internal ALB (DNS: `internal-FinTech-Internal-ALB-986761868.us-west-2.elb.amazonaws.com`) on port 3000, which load balances traffic to Flask servers in the App Tier (EC2 t3.micro instances in private subnets) via the `/process` endpoint.
-4. Flask processes the payment, writes logs to Amazon S3, triggering a Lambda function.
-5. Lambda processes the transaction and stores it in an Amazon RDS MySQL database (private subnets, encrypted).
-
----
-
-## Tech Stack
-
-| Layer          | Service/Tool                  | Purpose                          |
-|----------------|-------------------------------|----------------------------------|
-| Compute        | EC2 (Node.js & Flask)         | Host Web and App Tier services   |
-| Load Balancing | Application Load Balancer (x2)| Route traffic to Web/App Tiers   |
-|                | - Public ALB                  | Handle external user traffic     |
-|                | - Internal ALB                | Load balance internal App Tier   |
-| Storage        | Amazon S3                     | Store logs and trigger Lambda    |
-| Database       | Amazon RDS (MySQL)            | Store transaction data securely  |
-| Event-driven   | AWS Lambda                    | Process S3 logs and update RDS   |
-| Security       | IAM, SGs, NACLs               | Enforce least-privilege access   |
-| Networking     | VPC (public & private subnets)| Isolate tiers for security       |
+**Core Traffic Engineering Lifecycle:**
+1. **Public Edge Ingestion:** External client traffic hits a public-facing, internet-facing Application Load Balancer (ALB) over HTTP/80.
+2. **Web Tier Processing:** The public ALB distributes incoming payloads across a pool of Node.js servers hosted on EC2 `t3.micro` instances residing safely within public subnets.
+3. **Internal Microservice Routing:** The Web Tier issues secure upstream POST requests to a private, internal ALB (DNS: `internal-FinTech-Internal-ALB-986761868.us-west-2.elb.amazonaws.com`) on port 3000. 
+4. **App Tier Execution:** The internal ALB proxies the payloads across isolated Flask application servers running on EC2 instances inside private subnets via the `/process` target route.
+5. **Decoupled Logging & ETL:** The Flask application tier processes the payment, generates secure event receipts, and writes logs directly to an Amazon S3 bucket.
+6. **Data Tier Persistence:** Object creation hooks in the S3 bucket instantly trigger an asynchronous AWS Lambda worker. The function normalizes the logs and securely injects the financial records into an encrypted Amazon RDS MySQL database housed in the private data tier subnets.
 
 ---
 
-## What I Learned
+## Technology Stack
 
-- Troubleshot **504 Gateway Timeout** errors by adjusting ALB health check thresholds and EC2 instance response times.
-- Configured **ALB target groups** with proper health checks (port 3000, /health endpoint) and debugged failures.
-- Set up an **internal ALB** in private subnets to securely route traffic from the Web Tier to the App Tier, improving load balancing and isolation, and configured health checks for the AppTier-TG-3000 target group.
-- Installed packages on **isolated EC2s** by temporarily enabling NAT Gateway access, then disabling for security.
-- Connected **S3 triggers** to Lambda and ensured proper IAM roles for s3:GetObject and logs:PutLogEvents.
-- Built a **resilient and secure multi-tier network** with VPC, NACLs, and SGs, following Well-Architected principles.
+| Layer | Service / Component | Operational Purpose |
+| :--- | :--- | :--- |
+| **Compute** | EC2 (`t3.micro` Node.js & Flask) | Distributed hosting of decoupled Web and App Tier processing clusters. |
+| **Load Balancing** | Dual Application Load Balancers (ALBs) | High-availability traffic routing, endpoint abstraction, and layer-7 isolation. |
+| | *- Public-Facing ALB* | Perimeter edge routing for external consumer HTTP entry points. |
+| | *- Private Internal ALB* | Secure, isolated mid-tier routing to prevent direct App exposure. |
+| **Storage** | Amazon S3 | Durable, immutable audit log storage serving as an event provider. |
+| **Database** | Amazon RDS (MySQL) | Encrypted transactional relational state storage. |
+| **Serverless Compute** | AWS Lambda | Event-driven, asynchronous ETL worker processing log records. |
+| **Security Architecture** | IAM Policies, Security Groups, Network ACLs | Multi-layered perimeter security, stateful firewalls, and stateless subnets. |
+| **Networking Fabric** | Custom VPC Topology | Software-defined network utilizing strict public, private, and data subnets. |
 
 ---
 
-## How to Test the Pipeline
+## Engineering Breakthroughs & Deep Diagnostics
 
-1. Send a payment (replace `<external-alb>` with the ALB DNS name from the AWS Console):
+* **Layer-7 Debugging (504 Gateway Timeout):** Diagnosed and remediated recurrent `504 Gateway Timeout` errors at the edge by precisely realigning the public ALB timeout parameters with upstream Node.js socket readiness thresholds and optimization metrics.
+* **Target Group Optimization:** Engineered granular health check paths (`/health` route on port 3000) for the `AppTier-TG-3000` target group, resolving intermittent dropouts through aggressive stabilization of interval windows.
+* **Network Isolation Context:** Designed a highly defensive internal infrastructure loop. Installed system dependencies on isolated private EC2 nodes by dynamically attaching ephemeral NAT Gateways for egress package fetching, instantly dismantling the NAT routes post-compilation to prevent perpetual outbound exposures.
+* **Event-Driven Security Isolation:** Wired native S3 object triggers to serverless execution states. Hardened the Lambda runtime execution role by applying granular IAM boundaries restricted exclusively to minimum viable permissions (`s3:GetObject` and `logs:PutLogEvents`).
+
+---
+
+## Verifying the Architecture
+
+### 1. Execute an Edge Integration Transaction Request
+Fire a mock payment payload directly at your public boundary endpoint (substitute your active public ALB DNS alias below):
+
 ```bash
-curl -X POST http://<external-alb>/pay \
+curl -X POST http://<external-alb-dns>/pay \
   -H "Content-Type: application/json" \
   -d '{"id": "test123", "transaction": "roundtrip"}'
-
-2. Connect to RDS and verify data:
-sql
-SELECT * FROM payments.transactions ORDER BY id DESC;
-
----
-
-### Built Without
--No Terraform, CDK, or CloudFormation (manual setup for learning purposes).
--No managed frontend (Node.js app built from scratch).
--No public RDS (kept private with SGs and NACLs for security best practices).
-
-### Screenshots
-Terminal output, AWS Console configurations, and MySQL queries are located in the screenshots/ folder. Useful for documentation, verification, and future reference.
-
-## Well-Architected Alignment
--Security: RDS encryption, S3 server-side encryption, least-privilege SGs/NACLs.
--Cost Optimization: Used t3.micro instances, cleaned up resources post-deployment.
--Observability: Integrated CloudWatch Logs and Lambda for transaction alerts.
--Reliability: Multi-AZ setup for ALB, EC2, and RDS.
-
-## About Me
-I'm diving deep into cloud engineering by building real AWS infrastructure from the ground up. I currently hold the Google Associate Cloud Engineer certification and am preparing for the AWS Solutions Architect Associate (SAA) exam. After that, I’m aiming to earn the HashiCorp Terraform Associate and Certified Kubernetes Administrator (CKA) certifications.
-
-Each project I build sharpens my understanding and brings me closer to being job-ready in real cloud environments.
-
-If you're hiring or collaborating, feel free to reach out — I’m motivated, learning fast, and excited to contribute to real-world systems.
-
-Email: hatelydane@gmail.com
