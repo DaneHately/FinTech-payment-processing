@@ -60,3 +60,25 @@ Fire a mock payment payload directly at your public boundary endpoint (substitut
 curl -X POST http://<external-alb-dns>/pay \
   -H "Content-Type: application/json" \
   -d '{"id": "test123", "transaction": "roundtrip"}'
+### 2. Validate Private Relational Database Persistence
+SSH through your secure management plane to access the isolated database tier and audit the table rows:
+
+```sql
+SELECT * FROM payments.transactions ORDER BY id DESC;
+
+## Well-Architected Framework Alignment
+
+* **Security:** Enforced AWS KMS storage volume encryption at rest across Amazon RDS and server-side encryption arrays on S3 blocks. Implemented granular stateful Security Groups and stateless subnets.
+* **Cost Optimization:** Substituted heavy multi-AZ instances with low-profile `t3.micro` assets and enforced total architecture cleanup cycles post-testing to eliminate operational resource bloat.
+* **Reliability:** Built native application tier path routing spanning multiple Availability Zones (Multi-AZ) to achieve active-active high availability across independent compute regions.
+* **Observability:** Centralized system metrics by coupling application-level standard output logging lines with Amazon CloudWatch Insights for seamless debugging trails.
+
+---
+
+## About Ember Cloud LLC
+
+Ember Cloud LLC designs un-hackable serverless networks, cloud-native application patterns, and advanced DevOps workflows. Spearheaded by core enterprise credentials—including **AWS Certified Solutions Architect – Associate** and **Google Associate Cloud Engineer**—we bridge architectural theory with real-world infrastructure hardening.
+
+For secure infrastructure consulting or multi-cloud architecture engineering, connect with us at: **contact@embercloud.cc**
+
+*Last updated: May 2026*
